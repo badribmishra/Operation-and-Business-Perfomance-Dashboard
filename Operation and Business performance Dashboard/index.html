@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Operations & Business Performance Dashboard | Enterprise KPI Intelligence</title>
+  <meta name="description" content="Executive Operations & Business Performance Dashboard. Real-time SLA tracking, departmental unit economics, 12-month cohort trends, and data-driven decision frameworks.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="dark-theme">
+  <!-- Top Navigation Header -->
+  <header class="app-header" id="main-header">
+    <div class="header-left">
+      <div class="brand-badge">
+        <span class="pulse-indicator" id="telemetry-pulse"></span>
+        <span class="brand-tag">OPS INTEL v3.4</span>
+      </div>
+      <div class="header-titles">
+        <h1 class="app-title">Operations & Business Performance Dashboard</h1>
+        <p class="app-subtitle">Enterprise SLA Tracking • Departmental Unit Economics • Cohort Analytics • Prescriptive Action Matrix</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="status-pill" id="system-status">
+        <span class="status-dot"></span>
+        <span>Operational Sync Active</span>
+      </div>
+      <button class="btn btn-secondary btn-sm" id="btn-refresh-telemetry" title="Sync Live Operational Telemetry">
+        <span id="refresh-icon">🔄</span>
+        <span>Sync Telemetry</span>
+      </button>
+      <a href="Operations_and_Business_Performance_Dashboard.xlsx" download="Operations_and_Business_Performance_Dashboard.xlsx" class="btn btn-primary" id="btn-download-excel" title="Download Master Excel Workbook">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Download Excel (.xlsx)</span>
+      </a>
+      <button class="btn btn-secondary" id="theme-toggle" aria-label="Toggle Light and Dark Mode" title="Toggle Theme">
+        <span id="theme-icon">☀️</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Filter & Global Bar -->
+  <section class="control-bar" id="control-bar">
+    <div class="control-group">
+      <label for="dept-filter" class="control-label">Department:</label>
+      <select id="dept-filter" class="select-input">
+        <option value="ALL">All Departments (Enterprise)</option>
+        <option value="Tier 1 Frontline Support">Tier 1 Frontline Support</option>
+        <option value="Tier 2 Technical Escalations">Tier 2 Technical Escalations</option>
+        <option value="Billing & Payments Operations">Billing & Payments Operations</option>
+        <option value="Network & Field Operations">Network & Field Operations</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label for="risk-filter" class="control-label">Risk Profile:</label>
+      <select id="risk-filter" class="select-input">
+        <option value="ALL">All Risk Tiers</option>
+        <option value="Critical Risk">Critical Risk</option>
+        <option value="High Risk">High Risk</option>
+        <option value="Moderate Risk">Moderate Risk</option>
+        <option value="Low Risk">Low Risk</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label for="contract-filter" class="control-label">Contract:</label>
+      <select id="contract-filter" class="select-input">
+        <option value="ALL">All Contracts</option>
+        <option value="Month-to-month">Month-to-month</option>
+        <option value="One year">One year</option>
+        <option value="Two year">Two year</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label for="churn-filter" class="control-label">Status:</label>
+      <select id="churn-filter" class="select-input">
+        <option value="ALL">All Statuses</option>
+        <option value="Active">Active Accounts</option>
+        <option value="Churned">Churned Accounts</option>
+      </select>
+    </div>
+    <button class="btn btn-secondary btn-sm" id="btn-reset-filters" title="Reset All Filters">
+      <span>↺ Reset</span>
+    </button>
+    <div class="meta-stats">
+      <span class="meta-item"><strong id="filter-count-display">7,043</strong> / 7,043 Accounts</span>
+      <span class="meta-item"><strong>SLA Target:</strong> &le; 24.0h</span>
+    </div>
+  </section>
+
+  <!-- Top Executive Metric Scorecards (8 Cards) -->
+  <section class="kpi-scorecards-grid" id="kpi-grid">
+    <!-- Card 1: MRR -->
+    <div class="kpi-card" id="card-mrr">
+      <div class="kpi-card-header">
+        <span class="kpi-label">Monthly Recurring Revenue</span>
+        <span class="kpi-icon">💰</span>
+      </div>
+      <div class="kpi-value" id="kpi-mrr">$456,117</div>
+      <div class="kpi-footer">
+        <span class="badge badge-success">+4.8% MoM</span>
+        <span class="kpi-subtext">Total active portfolio</span>
+      </div>
+    </div>
+
+    <!-- Card 2: ARR -->
+    <div class="kpi-card" id="card-arr">
+      <div class="kpi-card-header">
+        <span class="kpi-label">Annual Run Rate (ARR)</span>
+        <span class="kpi-icon">📈</span>
+      </div>
+      <div class="kpi-value" id="kpi-arr">$5,473,399</div>
+      <div class="kpi-footer">
+        <span class="badge badge-info">12x MRR</span>
+        <span class="kpi-subtext">Annualized run-rate</span>
+      </div>
+    </div>
+
+    <!-- Card 3: Active Base -->
+    <div class="kpi-card" id="card-active-base">
+      <div class="kpi-card-header">
+        <span class="kpi-label">Active Customer Accounts</span>
+        <span class="kpi-icon">👥</span>
+      </div>
+      <div class="kpi-value" id="kpi-active-base">5,174</div>
+      <div class="kpi-footer">
+        <span class="badge badge-neutral">73.5% Retained</span>
+        <span class="kpi-subtext">7,043 total accounts</span>
+      </div>
+    </div>
+
+    <!-- Card 4: Churn Rate -->
+    <div class="kpi-card" id="card-churn-rate">
+      <div class="kpi-card-header">
+        <span class="kpi-label">Portfolio Churn Rate</span>
+        <span class="kpi-icon">⚠️</span>
+      </div>
+      <div class="kpi-value" id="kpi-churn-rate">26.54%</div>
+      <div class="kpi-footer">
+        <span class="badge badge-danger">Exceeds 20% benchmark</span>
+        <span class="kpi-subtext">1,869 churned accounts</span>
+      </div>
+    </div>
+
+    <!-- Card 5: Revenue at Risk -->
+    <div class="kpi-card" id="card-at-risk">
+      <div class="kpi-card-header">
+        <span class="kpi-label">Monthly Revenue at Risk</span>
+        <span class="kpi-icon">🛡️</span>
+      </div>
+      <div class="kpi-value" id="kpi-at-risk">$139,131</div>
+      <div class="kpi-footer">
+        <span class="badge badge-warning">Critical Priority</span>
+        <span class="kpi-subtext">Immediate retention focus</span>
+      </div>
+    </div>
+
+    <!-- Card 6: SLA Compliance -->
+    <div class="kpi-card" id="card-sla">
+      <div class="kpi-card-header">
+        <span class="kpi-label">Overall SLA Compliance</span>
+        <span class="kpi-icon">⏱️</span>
+      </div>
+      <div class="kpi-value" id="kpi-sla">77.7%</div>
+      <div class="kpi-footer">
+        <span class="badge badge-danger">Target: &ge; 85.0%</span>
+        <span class="kpi-subtext">24.0-hour turnaround</span>
+      </div>
+    </div>
+
+    <!-- Card 7: Avg CSAT -->
+    <div class="kpi-card" id="card-csat">
+      <div class="kpi-card-header">
+        <span class="kpi-label">Customer CSAT Rating</span>
+        <span class="kpi-icon">⭐</span>
+      </div>
+      <div class="kpi-value" id="kpi-csat">3.51 <small>/ 5.0</small></div>
+      <div class="kpi-footer">
+        <span class="badge badge-warning">Target: &ge; 4.20</span>
+        <span class="kpi-subtext">Post-resolution surveys</span>
+      </div>
+    </div>
+
+    <!-- Card 8: Total Cost to Serve -->
+    <div class="kpi-card" id="card-cost">
+      <div class="kpi-card-header">
+        <span class="kpi-label">Total Cost to Serve</span>
+        <span class="kpi-icon">💳</span>
+      </div>
+      <div class="kpi-value" id="kpi-cost">$484,175</div>
+      <div class="kpi-footer">
+        <span class="badge badge-danger">Operating Drag</span>
+        <span class="kpi-subtext">$68.75 / account avg</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Navigation Tab Headers -->
+  <nav class="tabs-nav" id="main-tabs" role="tablist">
+    <button class="tab-btn active" id="tab-btn-executive" role="tab" aria-selected="true" data-tab="tab-executive">
+      <span>🛡️ Executive KPI Cockpit</span>
+    </button>
+    <button class="tab-btn" id="tab-btn-dept" role="tab" aria-selected="false" data-tab="tab-dept">
+      <span>⚙️ Departmental Operations & SLAs</span>
+    </button>
+    <button class="tab-btn" id="tab-btn-trends" role="tab" aria-selected="false" data-tab="tab-trends">
+      <span>📈 12-Month Trends & Forecast</span>
+    </button>
+    <button class="tab-btn" id="tab-btn-decisions" role="tab" aria-selected="false" data-tab="tab-decisions">
+      <span>🎯 Decisions & What-If Simulator</span>
+    </button>
+    <button class="tab-btn" id="tab-btn-explorer" role="tab" aria-selected="false" data-tab="tab-explorer">
+      <span>📋 Master Data Explorer</span>
+    </button>
+    <button class="tab-btn" id="tab-btn-dictionary" role="tab" aria-selected="false" data-tab="tab-dictionary">
+      <span>📖 KPI Dictionary & Standards</span>
+    </button>
+  </nav>
+
+  <!-- Tab Content Containers -->
+  <main class="tab-content-area" id="tab-content-area">
+
+    <!-- ========================================== -->
+    <!-- TAB 1: EXECUTIVE KPI COCKPIT -->
+    <!-- ========================================== -->
+    <section class="tab-pane active" id="tab-executive" role="tabpanel">
+      <div class="grid-2-cols">
+        <!-- Chart 1: SLA Compliance by Department -->
+        <div class="dashboard-panel">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">SLA Compliance by Department (%)</h2>
+              <p class="panel-subtitle">Target SLA threshold: &ge; 85.0% compliance within 24h</p>
+            </div>
+            <span class="panel-tag tag-blue">Operations Benchmark</span>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="chart-exec-sla"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 2: Revenue at Risk by Operational Risk Tier -->
+        <div class="dashboard-panel">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">Monthly Revenue at Risk by Risk Tier ($)</h2>
+              <p class="panel-subtitle">Direct exposure from churners & high friction accounts</p>
+            </div>
+            <span class="panel-tag tag-amber">Financial Risk</span>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="chart-exec-risk"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Departmental Summary Table (Executive) -->
+      <div class="dashboard-panel mt-4">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Departmental Performance & Unit Economics Scorecard</h2>
+            <p class="panel-subtitle">Audited operational metrics across all 4 core business departments</p>
+          </div>
+          <span class="panel-tag tag-purple">Executive Table 1</span>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="exec-dept-table">
+            <thead>
+              <tr>
+                <th>Department</th>
+                <th>Active Accounts</th>
+                <th>Total Inquiries</th>
+                <th>Avg Resolution (hrs)</th>
+                <th>SLA Compliance %</th>
+                <th>FCR %</th>
+                <th>Avg CSAT</th>
+                <th>Total Cost to Serve</th>
+                <th>Net Margin %</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="exec-dept-tbody">
+              <!-- Populated via JavaScript -->
+            </tbody>
+            <tfoot>
+              <tr class="tfoot-total" id="exec-dept-total">
+                <!-- Populated via JavaScript -->
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- Risk Tier Segmentation Table -->
+      <div class="dashboard-panel mt-4">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Operational Risk Tier Segmentation & Action Priorities</h2>
+            <p class="panel-subtitle">Breakdown of customer portfolio by algorithmic operational risk score</p>
+          </div>
+          <span class="panel-tag tag-red">Executive Table 2</span>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="exec-risk-table">
+            <thead>
+              <tr>
+                <th>Operational Risk Tier</th>
+                <th>Account Count</th>
+                <th>% of Total Base</th>
+                <th>Churned Accounts</th>
+                <th>Churn Rate %</th>
+                <th>Monthly Revenue at Risk</th>
+                <th>Prescribed Action Priority</th>
+              </tr>
+            </thead>
+            <tbody id="exec-risk-tbody">
+              <!-- Populated via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: DEPARTMENTAL OPERATIONS & SLAS -->
+    <!-- ========================================== -->
+    <section class="tab-pane" id="tab-dept" role="tabpanel">
+      <!-- Operational Diagnostics Cards -->
+      <div class="insights-grid mb-4">
+        <div class="insight-box insight-critical">
+          <div class="insight-icon">🚨</div>
+          <div class="insight-content">
+            <h3 class="insight-title">1. Tier 2 Technical SLA Deficit (+29% over target)</h3>
+            <p class="insight-text">Tier 2 Technical Escalations has an average resolution time of ~31.0 hours vs the 24.0h SLA target. This prolonged latency accounts for a massive 48.6% churn rate among affected fiber subscribers.</p>
+          </div>
+        </div>
+        <div class="insight-box insight-warning">
+          <div class="insight-icon">⚠️</div>
+          <div class="insight-content">
+            <h3 class="insight-title">2. Billing & Payments Friction (42% Repeat Tickets)</h3>
+            <p class="insight-text">Subscribers using Electronic Check payment experience 1,818 support inquiries and 45% churn due to unconfirmed payment status and lack of real-time transactional feedback.</p>
+          </div>
+        </div>
+        <div class="insight-box insight-info">
+          <div class="insight-icon">💡</div>
+          <div class="insight-content">
+            <h3 class="insight-title">3. High Unit Cost in Network & Field Operations ($36.50/ticket)</h3>
+            <p class="insight-text">Physical line and dispatch tickets carry an elevated cost profile. Implementing telemetry threshold triggers can eliminate 35% of truck rolls through automated preventative checks.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2-cols">
+        <!-- Department Tickets vs Costs -->
+        <div class="dashboard-panel">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">Support Ticket Volume & Operating Cost by Department</h2>
+              <p class="panel-subtitle">Total volume handled vs total departmental support expense</p>
+            </div>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="chart-dept-tickets-cost"></canvas>
+          </div>
+        </div>
+
+        <!-- Handling Time vs SLA Target -->
+        <div class="dashboard-panel">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">Avg Handling Time vs SLA Target (24.0 hrs)</h2>
+              <p class="panel-subtitle">Departmental resolution duration in hours</p>
+            </div>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="chart-dept-handling-time"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Granular Service Desk Table -->
+      <div class="dashboard-panel mt-4">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Granular Service Desk SLA & Cost-to-Serve Benchmark</h2>
+            <p class="panel-subtitle">Corresponding to Sheet 2 in the Excel workbook</p>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="dept-granular-table">
+            <thead>
+              <tr>
+                <th>Department</th>
+                <th>Total Tickets</th>
+                <th>Avg Handling Time</th>
+                <th>Target SLA</th>
+                <th>SLA Breaches</th>
+                <th>SLA Compliance %</th>
+                <th>FCR %</th>
+                <th>Customer CSAT</th>
+                <th>Unit Cost / Ticket</th>
+                <th>Total Operations Cost</th>
+              </tr>
+            </thead>
+            <tbody id="dept-granular-tbody">
+              <!-- Populated via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: 12-MONTH TRENDS & FORECAST -->
+    <!-- ========================================== -->
+    <section class="tab-pane" id="tab-trends" role="tabpanel">
+      <div class="grid-2-cols">
+        <!-- Trend 1: Churn % vs SLA Compliance % -->
+        <div class="dashboard-panel">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">Monthly Churn Rate % vs SLA Compliance % (12 Months)</h2>
+              <p class="panel-subtitle">Inverted correlation showing operational SLA adherence directly driving retention</p>
+            </div>
+            <span class="panel-tag tag-blue">Trajectory</span>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="chart-trend-churn-sla"></canvas>
+          </div>
+        </div>
+
+        <!-- Trend 2: New MRR Inflow vs Churn MRR Lost -->
+        <div class="dashboard-panel">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">New MRR Inflow vs Churn MRR Lost ($)</h2>
+              <p class="panel-subtitle">Monthly revenue velocity and expansion vs churn erosion</p>
+            </div>
+            <span class="panel-tag tag-green">Financial Inflow</span>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="chart-trend-mrr"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monthly Trends Data Table -->
+      <div class="dashboard-panel mt-4">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">12-Month Historical & Forecast Performance Ledger</h2>
+            <p class="panel-subtitle">Corresponding to Sheet 3 in the Excel workbook</p>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="trends-table">
+            <thead>
+              <tr>
+                <th>Month</th>
+                <th>Active Base</th>
+                <th>New Signups</th>
+                <th>Churned Accts</th>
+                <th>Churn %</th>
+                <th>New MRR Inflow</th>
+                <th>Churn MRR Lost</th>
+                <th>Net MRR Change</th>
+                <th>Tickets</th>
+                <th>Avg Res (hrs)</th>
+                <th>SLA Comp %</th>
+                <th>CSAT</th>
+                <th>Cost to Serve</th>
+              </tr>
+            </thead>
+            <tbody id="trends-tbody">
+              <!-- Populated via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 4: DECISIONS & WHAT-IF SIMULATOR -->
+    <!-- ========================================== -->
+    <section class="tab-pane" id="tab-decisions" role="tabpanel">
+      <!-- Interactive What-If Simulator Card -->
+      <div class="dashboard-panel simulator-card mb-4">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">🧪 Interactive Operational What-If Scenario Modeler</h2>
+            <p class="panel-subtitle">Simulate real-time operational efficiency gains, automation deflection, and financial ROI</p>
+          </div>
+          <div class="header-btn-group">
+            <button class="btn btn-primary btn-sm" id="btn-apply-all-interventions">🚀 Apply All Initiatives</button>
+            <button class="btn btn-secondary btn-sm" id="btn-reset-simulator">Reset Defaults</button>
+          </div>
+        </div>
+
+        <div class="simulator-body">
+          <div class="sliders-grid">
+            <!-- Slider 1 -->
+            <div class="slider-control">
+              <div class="slider-header">
+                <label for="sim-deflection">AI Self-Service Deflection Rate:</label>
+                <span class="slider-val" id="val-sim-deflection">15%</span>
+              </div>
+              <input type="range" id="sim-deflection" min="0" max="50" value="15" step="1" class="slider-input">
+              <small class="slider-caption">Reduces frontline ticket volume via automated knowledge base & bots</small>
+            </div>
+
+            <!-- Slider 2 -->
+            <div class="slider-control">
+              <div class="slider-header">
+                <label for="sim-tier2-reduction">Tier 2 MTTR Reduction:</label>
+                <span class="slider-val" id="val-sim-tier2-reduction">10 hrs</span>
+              </div>
+              <input type="range" id="sim-tier2-reduction" min="0" max="20" value="10" step="1" class="slider-input">
+              <small class="slider-caption">Cuts Technical Escalation resolution from 31h toward 21h</small>
+            </div>
+
+            <!-- Slider 3 -->
+            <div class="slider-control">
+              <div class="slider-header">
+                <label for="sim-contract-conv">Month-to-Month Annual Conversion:</label>
+                <span class="slider-val" id="val-sim-contract-conv">12%</span>
+              </div>
+              <input type="range" id="sim-contract-conv" min="0" max="35" value="12" step="1" class="slider-input">
+              <small class="slider-caption">Converts flight-risk monthly subscribers to 1-year commitments</small>
+            </div>
+          </div>
+
+          <!-- Dynamic Projections Output Box -->
+          <div class="simulator-results-deck">
+            <div class="sim-result-card">
+              <span class="sim-result-label">Projected Monthly Savings</span>
+              <span class="sim-result-val text-green" id="sim-cost-savings">$38,450</span>
+              <small class="sim-result-sub">Support cost reduction</small>
+            </div>
+            <div class="sim-result-card">
+              <span class="sim-result-label">Preserved Annual ARR</span>
+              <span class="sim-result-val text-blue" id="sim-arr-preserved">$324,800</span>
+              <small class="sim-result-sub">Prevented churn revenue</small>
+            </div>
+            <div class="sim-result-card">
+              <span class="sim-result-label">Projected Churn Rate</span>
+              <span class="sim-result-val text-teal" id="sim-new-churn">22.8%</span>
+              <small class="sim-result-sub">Down from 26.54% (-3.74 pts)</small>
+            </div>
+            <div class="sim-result-card">
+              <span class="sim-result-label">Projected SLA Compliance</span>
+              <span class="sim-result-val text-green" id="sim-new-sla">89.4%</span>
+              <small class="sim-result-sub">Exceeds 85% benchmark</small>
+            </div>
+            <div class="sim-result-card">
+              <span class="sim-result-label">Net Operating Margin Lift</span>
+              <span class="sim-result-val text-green" id="sim-new-margin">+7.4%</span>
+              <small class="sim-result-sub">Direct EBITDA enhancement</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Prescriptive Decision Matrix -->
+      <div class="dashboard-panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">🎯 Data-Driven Operational Decision & Intervention Matrix</h2>
+            <p class="panel-subtitle">Corresponding to Sheet 4 in the Excel workbook • Click "Apply" to simulate individual initiative</p>
+          </div>
+          <span class="panel-tag tag-purple">Strategic Roadmap</span>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="decisions-table">
+            <thead>
+              <tr>
+                <th>Action ID</th>
+                <th>Strategic Decision & Initiative</th>
+                <th>Root Cause & Friction Point</th>
+                <th>Department</th>
+                <th>Severity</th>
+                <th>Actionable Intervention</th>
+                <th>Quantified Expected ROI</th>
+                <th>Strategic Owner</th>
+                <th>Timeline</th>
+                <th>Execute</th>
+              </tr>
+            </thead>
+            <tbody id="decisions-tbody">
+              <!-- Populated via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 5: MASTER DATA EXPLORER -->
+    <!-- ========================================== -->
+    <section class="tab-pane" id="tab-explorer" role="tabpanel">
+      <div class="dashboard-panel">
+        <div class="panel-header flex-between">
+          <div>
+            <h2 class="panel-title">📋 Master Operational Records (<span id="explorer-total-badge">7,043</span> Accounts)</h2>
+            <p class="panel-subtitle">💡 <em>Click any row to open Customer 360 Operational Profile</em> • Real-time search & sorting</p>
+          </div>
+          <div class="explorer-actions">
+            <button class="btn btn-secondary btn-sm" id="btn-export-csv" title="Download currently filtered records as CSV">
+              📥 Export Filtered CSV
+            </button>
+            <div class="search-box">
+              <input type="text" id="table-search" placeholder="Search ID, Dept, Contract..." class="search-input">
+            </div>
+          </div>
+        </div>
+
+        <div class="table-responsive mt-3">
+          <table class="data-table" id="master-records-table">
+            <thead>
+              <tr>
+                <th data-sort="customerID">Customer ID</th>
+                <th data-sort="Department">Department</th>
+                <th data-sort="Contract">Contract</th>
+                <th data-sort="tenure">Tenure (Mos)</th>
+                <th data-sort="MonthlyCharges">Monthly Rev ($)</th>
+                <th data-sort="TotalTickets">Tickets</th>
+                <th data-sort="AvgResolutionTimeHours">Res (hrs)</th>
+                <th data-sort="SLAMet">SLA Met</th>
+                <th data-sort="FirstContactResolution">FCR</th>
+                <th data-sort="CSATScore">CSAT</th>
+                <th data-sort="CostToServe">Cost to Serve</th>
+                <th data-sort="Churn">Churn</th>
+                <th data-sort="OperationalRiskTier">Risk Tier</th>
+              </tr>
+            </thead>
+            <tbody id="master-records-tbody">
+              <!-- Populated via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Controls -->
+        <div class="pagination-bar">
+          <span class="pagination-info" id="pagination-info">Showing 1-25 of 7,043 records</span>
+          <div class="pagination-buttons">
+            <button class="btn btn-secondary btn-sm" id="btn-first-page">&laquo; First</button>
+            <button class="btn btn-secondary btn-sm" id="btn-prev-page" disabled>&larr; Prev</button>
+            <span class="current-page-num" id="current-page-display">Page 1 of 282</span>
+            <button class="btn btn-secondary btn-sm" id="btn-next-page">Next &rarr;</button>
+            <button class="btn btn-secondary btn-sm" id="btn-last-page">Last &raquo;</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 6: KPI DICTIONARY & STANDARDS -->
+    <!-- ========================================== -->
+    <section class="tab-pane" id="tab-dictionary" role="tabpanel">
+      <div class="dashboard-panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">📖 Operations & Business Performance Data Dictionary</h2>
+            <p class="panel-subtitle">Standardized metric formulas, calculation logic, enterprise benchmarks, and organizational governance</p>
+          </div>
+          <span class="panel-tag tag-blue">Standard SLA Standards</span>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="dictionary-table">
+            <thead>
+              <tr>
+                <th>KPI / Metric Name</th>
+                <th>Category</th>
+                <th>Definition & Scope</th>
+                <th>Calculation Logic / Formula</th>
+                <th>Target SLA / Benchmark</th>
+                <th>Department Owner</th>
+              </tr>
+            </thead>
+            <tbody id="dictionary-tbody">
+              <!-- Populated via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="footer-left">
+      <span>🛡️ Operations & Business Performance Dashboard</span>
+      <span>•</span>
+      <span>Enterprise Operational Excellence & Data-Driven Governance</span>
+    </div>
+    <div class="footer-right">
+      <span>Excel Workbook: <strong>Operations_and_Business_Performance_Dashboard.xlsx</strong></span>
+    </div>
+  </footer>
+
+  <!-- Customer 360 Operational Profile Modal -->
+  <div id="customer-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-badge-id" id="modal-cust-id">7590-VHVEG</span>
+          <span class="badge badge-warning" id="modal-cust-dept">Billing & Payments</span>
+          <span class="badge" id="modal-cust-tier">Critical Risk</span>
+          <span class="badge" id="modal-cust-churn">Active Account</span>
+        </div>
+        <button class="modal-close-btn" id="modal-close-btn" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-body">
+        <!-- Injected via JavaScript -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" id="modal-close-footer-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
